@@ -686,7 +686,7 @@ def main() -> None:
         default=os.getenv("MCP_TRANSPORT", "stdio"),
     )
     parser.add_argument("--host", default=os.getenv("MCP_HOST", "127.0.0.1"))
-    parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", "8441")))
+    parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", "8510")))
     args = parser.parse_args()
 
     if args.transport == "stdio":
