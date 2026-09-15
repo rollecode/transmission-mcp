@@ -3,3 +3,7 @@
 __pycache__/
 *.egg-info/
 uv.lock
+node_modules/
+transmission-mcp.service
+transmission-mcp-auth.service
+transmission-mcp.conf

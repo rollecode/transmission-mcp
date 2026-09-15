@@ -109,6 +109,37 @@ claude mcp add transmission -- /path/to/transmission-mcp/.venv/bin/transmission-
 
 Anywhere a tool takes `ids`, it accepts torrent numbers, hash strings, or the literal `recently-active`. Omitting them means every torrent, which is why `remove_torrent` requires them.
 
+## Hosting it
+
+Running it over HTTP puts it in reach of Claude.ai as a custom connector, and of Claude Code on other machines. Three tiers, the same shape the other servers in this family use:
+
+| Tier | Port | What it does |
+| --- | --- | --- |
+| `transmission-mcp` | 8510 | The server. No login of its own, never exposed |
+| nginx | 8511 | Front door, behind a Cloudflare Tunnel |
+| `auth-server.js` | 8512 | OAuth 2.1 sign-in, or a fixed bearer token |
+
+```bash
+npm install
+node set-password.js 'a password for the sign-in page'
+printf 'TRANSMISSION_URL=...\n' > ~/.config/transmission-mcp/env
+chmod 600 ~/.config/transmission-mcp/env
+```
+
+Copy `systemd/*.service` into `/etc/systemd/system/`, replacing `YOUR_USER` and the `ISSUER` hostname, then:
+
+```bash
+sudo systemctl enable --now transmission-mcp transmission-mcp-auth
+```
+
+Point `nginx/transmission-mcp.conf` at your own hostname and send the tunnel at `127.0.0.1:8511`.
+
+Environment the server itself reads: `TRANSMISSION_URL, TRANSMISSION_USERNAME, TRANSMISSION_PASSWORD`. The sign-in page carries the Transmission mark and accent colour, set through `APP_NAME`, `APP_ACCENT` and `APP_BLURB` in the auth unit.
+
+### Claude.ai
+
+Settings, Connectors, Add custom connector, URL `https://transmission-mcp.your-domain/mcp`, client ID and secret blank. The sign-in page asks for the password set above. Connectors belong to the account, so adding it once covers mobile too.
+
 ## Development
 
 ```bash
