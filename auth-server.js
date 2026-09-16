@@ -15,15 +15,28 @@ const Database = require('better-sqlite3');
 
 const APP = process.env.APP_SLUG || 'mcp';
 const APP_NAME = process.env.APP_NAME || APP;
-// Brand accent, used for the focus ring and the sign-in button.
-const APP_ACCENT = process.env.APP_ACCENT || '#111';
-const APP_ACCENT_FG = process.env.APP_ACCENT_FG || '#fff';
 const APP_LOGO = process.env.APP_LOGO || '/icon.png';
-const APP_LOGO_WIDTH = process.env.APP_LOGO_WIDTH || '48px';
-// A wordmark needs a second file for dark mode; currentColor does not
-// inherit into an <img>, so the swap happens in CSS.
 const APP_LOGO_DARK = process.env.APP_LOGO_DARK || '';
-const APP_BLURB = process.env.APP_BLURB || `Sign in to give this app access to your ${APP_NAME} data.`;
+const APP_LOGO_WIDTH = process.env.APP_LOGO_WIDTH || '40px';
+// A wordmark already says the name, so the heading would repeat it.
+const APP_WORDMARK = process.env.APP_WORDMARK === '1';
+
+// The brand's own palette, light and dark. Discrete variables rather than a
+// JSON blob: systemd strips the quotes out of an Environment= value, which
+// silently left every page on the neutral defaults.
+const APP_THEME = {
+  fg: process.env.APP_FG || '#111',
+  muted: process.env.APP_MUTED || '#666',
+  line: process.env.APP_LINE || '#d8d8d8',
+  bg: process.env.APP_BG || '#fff',
+  accent: process.env.APP_ACCENT || '#111',
+  onAccent: process.env.APP_ON_ACCENT || '#fff',
+  darkFg: process.env.APP_DARK_FG || '#eee',
+  darkMuted: process.env.APP_DARK_MUTED || '#999',
+  darkLine: process.env.APP_DARK_LINE || '#333',
+  darkBg: process.env.APP_DARK_BG || '#0e0e0e',
+};
+
 const PORT = Number(process.env.PORT || 8432);
 const UPSTREAM = process.env.UPSTREAM || 'http://127.0.0.1:8430';
 const ISSUER = (process.env.ISSUER || '').replace(/\/$/, '');
@@ -260,35 +273,36 @@ function loginPage({ params, error }) {
 <link rel="icon" href="/icon.png" type="image/png">
 <link rel="apple-touch-icon" href="/icon.png">
 <style>
-  :root{color-scheme:light dark;--fg:#111;--muted:#666;--line:#d8d8d8;--bg:#fff}
+  /* ${escapeHtml(APP_NAME)}'s own palette. */
+  :root{color-scheme:light dark;--fg:${APP_THEME.fg};--muted:${APP_THEME.muted};
+        --line:${APP_THEME.line};--bg:${APP_THEME.bg};--accent:${APP_THEME.accent}}
   @media (prefers-color-scheme:dark){
-    :root{--fg:#eee;--muted:#999;--line:#333;--bg:#0e0e0e}
+    :root{--fg:${APP_THEME.darkFg};--muted:${APP_THEME.darkMuted};
+          --line:${APP_THEME.darkLine};--bg:${APP_THEME.darkBg};--accent:${APP_THEME.accent}}
   }
   *{box-sizing:border-box}
   body{font:15px/1.5 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);
        display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:1.5rem}
   form{width:100%;max-width:20rem}
-  img{display:block;width:${APP_LOGO_WIDTH};height:auto;margin-bottom:1.25rem}
+  img{display:block;width:${APP_LOGO_WIDTH};height:auto;margin-bottom:1.5rem}
   ${APP_LOGO_DARK ? `.logo-dark{display:none}
   @media (prefers-color-scheme:dark){.logo-light{display:none}.logo-dark{display:block}}` : ''}
-  h1{font-size:1rem;font-weight:600;margin:0 0 .25rem}
-  p{color:var(--muted);margin:0 0 1.5rem}
+  h1{font-size:1rem;font-weight:600;margin:0 0 1.25rem}
   label{display:block;font-size:.8125rem;color:var(--muted);margin-bottom:.375rem}
-  input{width:100%;padding:.5rem .625rem;border:1px solid var(--line);border-radius:3px;
+  input{width:100%;padding:.5rem .625rem;border:1px solid var(--line);border-radius:6px;
         background:transparent;color:inherit;font:inherit}
-  input:focus{outline:2px solid ${APP_ACCENT};outline-offset:-1px;border-color:transparent}
-  button{width:100%;margin-top:1rem;padding:.5rem;border:1px solid ${APP_ACCENT};border-radius:3px;
-         background:${APP_ACCENT};color:${APP_ACCENT_FG};font:inherit;cursor:pointer}
+  input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  button{width:100%;margin-top:1rem;padding:.5rem;border:1px solid var(--accent);border-radius:6px;
+         background:var(--accent);color:${APP_THEME.onAccent};font:inherit;cursor:pointer}
   button:hover{opacity:.85}
   .err{color:#c0392b;margin:0 0 1rem}
   @media (prefers-color-scheme:dark){.err{color:#ff7a6b}}
 </style></head><body>
   <form method="POST" action="/authorize">
       ${hidden}
-      <img class="logo-light" src="${APP_LOGO}" alt="">
-      ${APP_LOGO_DARK ? `<img class="logo-dark" src="${APP_LOGO_DARK}" alt="">` : ''}
-      <h1>${escapeHtml(APP_NAME)}</h1>
-      <p>${escapeHtml(APP_BLURB)}</p>
+      <img class="logo-light" src="${APP_LOGO}" alt="${escapeHtml(APP_NAME)}">
+      ${APP_LOGO_DARK ? `<img class="logo-dark" src="${APP_LOGO_DARK}" alt="${escapeHtml(APP_NAME)}">` : ''}
+      ${APP_WORDMARK ? '' : `<h1>${escapeHtml(APP_NAME)}</h1>`}
       ${error ? `<p class="err">${escapeHtml(error)}</p>` : ''}
       <label for="password">Password</label>
       <input id="password" type="password" name="password" autofocus autocomplete="current-password" required>
@@ -649,8 +663,10 @@ app.get('/', (_req, res) => {
 <link rel="icon" href="/icon.png" type="image/png">
 <link rel="apple-touch-icon" href="/icon.png">
 <style>
-  :root{color-scheme:light dark;--fg:#111;--muted:#666;--bg:#fff}
-  @media (prefers-color-scheme:dark){:root{--fg:#eee;--muted:#999;--bg:#0e0e0e}}
+  :root{color-scheme:light dark;--fg:${APP_THEME.fg};--muted:${APP_THEME.muted};--bg:${APP_THEME.bg}}
+  @media (prefers-color-scheme:dark){
+    :root{--fg:${APP_THEME.darkFg};--muted:${APP_THEME.darkMuted};--bg:${APP_THEME.darkBg}}
+  }
   body{font:15px/1.5 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);
        display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:1.5rem}
   main{max-width:20rem}
@@ -661,8 +677,9 @@ app.get('/', (_req, res) => {
   p{color:var(--muted);margin:0}
 </style></head><body>
   <main>
-    <img src="${APP_LOGO}" alt="">
-    <h1>${escapeHtml(APP_NAME)}</h1>
+    <img class="logo-light" src="${APP_LOGO}" alt="${escapeHtml(APP_NAME)}">
+    ${APP_LOGO_DARK ? `<img class="logo-dark" src="${APP_LOGO_DARK}" alt="${escapeHtml(APP_NAME)}">` : ''}
+    ${APP_WORDMARK ? '' : `<h1>${escapeHtml(APP_NAME)}</h1>`}
     <p>MCP endpoint. Add it as a connector to use it.</p>
   </main>
 </body></html>`);
