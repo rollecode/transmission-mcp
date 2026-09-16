@@ -18,6 +18,11 @@ const APP_NAME = process.env.APP_NAME || APP;
 // Brand accent, used for the focus ring and the sign-in button.
 const APP_ACCENT = process.env.APP_ACCENT || '#111';
 const APP_ACCENT_FG = process.env.APP_ACCENT_FG || '#fff';
+const APP_LOGO = process.env.APP_LOGO || '/icon.png';
+const APP_LOGO_WIDTH = process.env.APP_LOGO_WIDTH || '48px';
+// A wordmark needs a second file for dark mode; currentColor does not
+// inherit into an <img>, so the swap happens in CSS.
+const APP_LOGO_DARK = process.env.APP_LOGO_DARK || '';
 const APP_BLURB = process.env.APP_BLURB || `Sign in to give this app access to your ${APP_NAME} data.`;
 const PORT = Number(process.env.PORT || 8432);
 const UPSTREAM = process.env.UPSTREAM || 'http://127.0.0.1:8430';
@@ -263,7 +268,9 @@ function loginPage({ params, error }) {
   body{font:15px/1.5 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);
        display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:1.5rem}
   form{width:100%;max-width:20rem}
-  img{display:block;width:48px;height:48px;margin-bottom:1.25rem;border-radius:8px}
+  img{display:block;width:${APP_LOGO_WIDTH};height:auto;margin-bottom:1.25rem}
+  ${APP_LOGO_DARK ? `.logo-dark{display:none}
+  @media (prefers-color-scheme:dark){.logo-light{display:none}.logo-dark{display:block}}` : ''}
   h1{font-size:1rem;font-weight:600;margin:0 0 .25rem}
   p{color:var(--muted);margin:0 0 1.5rem}
   label{display:block;font-size:.8125rem;color:var(--muted);margin-bottom:.375rem}
@@ -278,7 +285,8 @@ function loginPage({ params, error }) {
 </style></head><body>
   <form method="POST" action="/authorize">
       ${hidden}
-      <img src="/icon.png" alt="">
+      <img class="logo-light" src="${APP_LOGO}" alt="">
+      ${APP_LOGO_DARK ? `<img class="logo-dark" src="${APP_LOGO_DARK}" alt="">` : ''}
       <h1>${escapeHtml(APP_NAME)}</h1>
       <p>${escapeHtml(APP_BLURB)}</p>
       ${error ? `<p class="err">${escapeHtml(error)}</p>` : ''}
@@ -646,12 +654,14 @@ app.get('/', (_req, res) => {
   body{font:15px/1.5 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);
        display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:1.5rem}
   main{max-width:20rem}
-  img{display:block;width:48px;height:48px;margin-bottom:1.25rem;border-radius:8px}
+  img{display:block;width:${APP_LOGO_WIDTH};height:auto;margin-bottom:1.25rem}
+  ${APP_LOGO_DARK ? `.logo-dark{display:none}
+  @media (prefers-color-scheme:dark){.logo-light{display:none}.logo-dark{display:block}}` : ''}
   h1{font-size:1rem;font-weight:600;margin:0 0 .25rem}
   p{color:var(--muted);margin:0}
 </style></head><body>
   <main>
-    <img src="/icon.png" alt="">
+    <img src="${APP_LOGO}" alt="">
     <h1>${escapeHtml(APP_NAME)}</h1>
     <p>MCP endpoint. Add it as a connector to use it.</p>
   </main>
