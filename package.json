@@ -1,6 +1,6 @@
 {
   "name": "transmission-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Transmission MCP server with OAuth 2.1, for Claude.ai custom connectors and Claude Code",
   "main": "auth-server.js",
   "scripts": {

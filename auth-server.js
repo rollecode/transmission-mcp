@@ -173,7 +173,7 @@ const resourceMetadata = {
   bearer_methods_supported: ['header'],
   scopes_supported: [APP],
   // RFC 9728 section 2. A client with somewhere to show a name gets one.
-  resource_name: 'Cronometer',
+  resource_name: APP_NAME,
   resource_documentation: ISSUER,
 };
 
